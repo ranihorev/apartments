@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@types/node':
+        specifier: ^20.11.16
+        version: 20.11.16
     devDependencies:
       '@tsconfig/node18':
         specifier: ^18.2.2

@@ -1,18 +1,32 @@
-import { StackContext, Api, EventBus, Bucket, Function } from "sst/constructs";
+import { StackContext, Api, EventBus, Bucket, Function, Cron } from "sst/constructs";
 
 export function API({ stack }: StackContext) {
-  const bucket = new Bucket(stack, "Bucket", { name: "stuy-data" });
+  const bucketName = stack.stage !== "prod" ? "stuy-data" : "stuy-data-prod";
+  const bucket = new Bucket(stack, "Bucket", { name: bucketName });
 
-  const api = new Api(stack, "api", {
-    defaults: {
+  new Cron(stack, "cron", {
+    schedule: "rate(15 minutes)",
+    job: {
       function: {
-        bind: [bucket],
-        permissions: ["ses"],
+        handler: "packages/functions/src/cron.handler",
+        permissions: ["ses", "s3"],
         environment: {
           NODE_TLS_REJECT_UNAUTHORIZED: "0",
         },
       },
     },
+  });
+
+  new Function(stack, "lambda", {
+    handler: "packages/functions/src/lambda.handler",
+    permissions: ["ses"],
+    bind: [bucket],
+    environment: {
+      NODE_TLS_REJECT_UNAUTHORIZED: "0",
+    },
+  });
+
+  const api = new Api(stack, "api", {
     routes: {
       "GET /": "packages/functions/src/lambda.handler",
     },
