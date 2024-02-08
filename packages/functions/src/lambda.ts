@@ -35,10 +35,10 @@ export const handler = ApiHandler(async (_evt) => {
   const previousData = (await readDataFromS3(FILE_NAME)) as UnitsData | undefined;
   const newUnits = findNewUnits(previousData?.unitModel || [], newData.unitModel);
 
-  if (newUnits.length || true) {
-    const email = newData.unitModel.map(getUnitDataForEmail).join("\n----\n");
+  if (newUnits.length) {
+    const email = newUnits.map(getUnitDataForEmail).join("\n----\n");
     await sendEmail(`New units found: ${newData.count}`, email);
-    // await storeDataToS3(data);
+    await storeDataToS3(newData);
     return {
       statusCode: 200,
       body: JSON.stringify({ status: `New units found: ${newData.count}`, data: email }),
