@@ -1,4 +1,4 @@
-import { S3 } from "@aws-sdk/client-s3";
+import { NoSuchKey, S3 } from "@aws-sdk/client-s3";
 import { SES } from "@aws-sdk/client-ses";
 
 const FILE_NAME = "data.json";
@@ -94,7 +94,11 @@ async function readDataFromS3(key: string) {
     const data = await res.Body.transformToString();
     return JSON.parse(data);
   } catch (e) {
-    console.log(`Key ${key} not found in S3`, e);
+    if (e instanceof NoSuchKey) {
+      console.log(`Key ${key} not found in S3`);
+    } else {
+      console.error(e);
+    }
     return undefined;
   }
 }
