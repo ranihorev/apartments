@@ -42,6 +42,8 @@ export async function findNewApartments() {
     await sendEmail(`New units found: ${newData.count}`, email);
     await storeDataToS3(newData);
     return { status: `New units found: ${newData.count}`, data: email };
+  } else {
+    console.log("No new units were found");
   }
   return { status: "Nothing new found", data: newData };
 }
