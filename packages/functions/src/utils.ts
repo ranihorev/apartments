@@ -37,11 +37,12 @@ export async function findNewApartments() {
   const previousData = (await readDataFromS3(FILE_NAME)) as UnitsData | undefined;
   const newUnits = findNewUnits(previousData?.unitModel || [], newData.unitModel);
 
-  if (newUnits.length) {
+  const numNewUnits = newUnits.length;
+  if (numNewUnits > 0) {
     const email = newUnits.map(getUnitDataForEmail).join("\n----\n");
-    await sendEmail(`New units found: ${newData.count}`, email);
+    await sendEmail(`New units found: ${numNewUnits}`, email);
     await storeDataToS3(newData);
-    return { status: `New units found: ${newData.count}`, data: email };
+    return { status: `New units found: ${numNewUnits}`, data: email };
   } else {
     console.log("No new units were found");
   }
