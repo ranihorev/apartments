@@ -1,4 +1,4 @@
-import { StackContext, Api, EventBus, Bucket, Function, Cron } from "sst/constructs";
+import { Api, Bucket, Cron, Function, StackContext } from "sst/constructs";
 
 export function API({ stack }: StackContext) {
   const bucketName = stack.stage !== "prod" ? "stuy-data" : "stuy-data-prod";

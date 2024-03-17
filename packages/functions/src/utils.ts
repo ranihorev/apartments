@@ -115,6 +115,7 @@ function getUnitDataForEmail(unit: Unit) {
   const neighborhood = unit.neighborhood;
   const finish = unit.finishName;
   const details = unit.amenitiesFriendlyDescription;
+  const availableAt = ((unit.availableDate as string) || "").slice(0, 10);
   const encodedAddress = encodeURIComponent(`${address}, New York`);
 
   return `
@@ -125,6 +126,7 @@ function getUnitDataForEmail(unit: Unit) {
   finish: ${finish}
   size: ${size} sqft
   link: ${url}
+  availableAt: ${availableAt}
   description: ${details.join(", ")}
   `;
 }
