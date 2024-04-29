@@ -7,7 +7,7 @@ type Unit = Record<string, any>;
 type Units = Array<Unit>;
 interface UnitsData {
   count: number;
-  unitModel: Units;
+  unitModels: Units;
 }
 
 const BUCKET = process.env.IS_LOCAL ? "stuy-data" : "stuy-data-prod";
@@ -15,7 +15,7 @@ const BUCKET = process.env.IS_LOCAL ? "stuy-data" : "stuy-data-prod";
 export async function findNewApartments() {
   console.log("finding new units");
   const url =
-    "https://pd-stuytown-cd.stuytown.com/pux-api/units-filter/details?sc_apikey=5DE671A5-4DA5-437B-B9EE-81640ADFDA74&Bedrooms=2-3&Flex=false&page=1&Order=low-price&itemsOnPage=100&datasourceId=%7BF4A776F6-75AA-4D0A-8DE7-28A30B710E8A%7D&PropertyName=Stuyvesant+Town_Peter+Cooper+Village";
+    "https://pd-di.beamliving.com/api/units?Bedrooms=2-3&Flex=false&page=0&itemsOnPage=21&PropertyName=Stuyvesant+Town_Peter+Cooper+Village";
   const result = await fetch(url, {
     headers: {
       accept: "application/json",
@@ -35,7 +35,7 @@ export async function findNewApartments() {
   });
   const newData = (await result.json()) as UnitsData;
   const previousData = (await readDataFromS3(FILE_NAME)) as UnitsData | undefined;
-  const newUnits = findNewUnits(previousData?.unitModel || [], newData.unitModel);
+  const newUnits = findNewUnits(previousData?.unitModels || [], newData.unitModels);
 
   const numNewUnits = newUnits.length;
   if (numNewUnits > 0) {
@@ -80,7 +80,7 @@ async function storeDataToS3(data: any) {
 
 function findNewUnits(previousData: Units, newData: Units): Units {
   const newUnits = newData.filter((unit) => {
-    return !previousData.some((prevUnit) => prevUnit.unitId === unit.unitId);
+    return !previousData.some((prevUnit) => prevUnit.unitSpk === unit.unitSpk);
   });
   return newUnits;
 }
@@ -107,26 +107,26 @@ async function readDataFromS3(key: string) {
 }
 
 function getUnitDataForEmail(unit: Unit) {
-  const url = unit.absoluteUrl;
-  const price = unit.price;
+  // const url = unit.absoluteUrl;
+  const price = unit.unitRates["12"];
   const size = unit.sqft;
-  const address = unit.address;
+  const address = unit.building.address;
   const bedrooms = unit.bedrooms;
-  const neighborhood = unit.neighborhood;
-  const finish = unit.finishName;
-  const details = unit.amenitiesFriendlyDescription;
+  const bathrooms = unit.bathrooms;
+  const neighborhood = unit.property.name;
+  const finish = unit.finish.name;
+  const details = unit.amenities.map((amenity: any) => amenity.friendlyDescription).join(", ");
   const availableAt = ((unit.availableDate as string) || "").slice(0, 10);
-  const encodedAddress = encodeURIComponent(`${address}, New York`);
+  // const encodedAddress = encodeURIComponent(`${address}, New York`);
 
   return `
   ${neighborhood} - ${address}
-  address: https://maps.google.com/?q=${encodedAddress}
   bedrooms: ${bedrooms}
+  bathrooms: ${bathrooms}
   price: ${price}
   finish: ${finish}
   size: ${size} sqft
-  link: ${url}
   availableAt: ${availableAt}
-  description: ${details.join(", ")}
+  description: ${details}
   `;
 }
